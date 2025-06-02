@@ -1,0 +1,11 @@
+claim_id,diagnosis_codes,procedure_codes,provider_note,payer,denial_status
+C001,M16.11,27447,Total hip arthroplasty on left side. No complications.,Medicare,Paid
+C002,I10,99214,Follow-up visit for hypertension. Adjust medication.,Commercial,Denied
+C003,E11.9,83036,HbA1c level measured for diabetic management.,Medicaid,Paid
+C004,M17.11,29881,Arthroscopic knee meniscectomy on right knee.,Commercial,Denied
+C005,I25.10,99214,Cardiology consultation for coronary artery disease.,Medicare,Paid
+C006,M54.5,20550,Injection of trigger point in lower back for pain.,Commercial,Paid
+C007,J45.909,94640,Nebulizer therapy for asthma exacerbation.,Medicaid,Denied
+C008,G43.909,96372,Intravenous infusion of antibiotics for infection.,Medicare,Paid
+C009,M54.5,27447,Injection of trigger point in lower back for pain.,Commercial,Denied
+C010,E78.5,80061,Lipid panel testing for hyperlipidemia.,Medicaid,Paid
