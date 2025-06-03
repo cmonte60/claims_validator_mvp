@@ -78,6 +78,3 @@ st.markdown("""
         Prototype powered by AI | Designed for hospital leadership demonstration
     </div>
 """, unsafe_allow_html=True)
-git add .
-git commit -m "Describe your update"
-git push
