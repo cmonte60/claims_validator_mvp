@@ -54,7 +54,7 @@ def load_and_predict(df):
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
     st.subheader("Raw Claims Data")
-    st.dataframe(df.head(10))
+    st.dataframe(preprocessed_df)
 
     processed_df = load_and_predict(df)
 
