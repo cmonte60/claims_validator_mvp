@@ -15,50 +15,46 @@ st.sidebar.header("Configuration")
 api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
 uploaded_file = st.sidebar.file_uploader("Upload Claims CSV", type="csv")
 
-# --- Helper: Build Prompt ---
+# --- Utility: Get best matching column name ---
+def get_column(df, options):
+    for col in df.columns:
+        for opt in options:
+            if opt.lower() in col.lower():
+                return col
+    return None
+
+# --- Updated Prompt Builder ---
 def build_prompt(row):
-    return f"""
-You are a medical coding AI assistant reviewing insurance claims.
+    # Dynamically resolve flexible column names
+    patient_age = row.get(get_column(row, ['Patient Age', 'Age']), 'Unknown')
+    patient_gender = row.get(get_column(row, ['Gender', 'Sex']), 'Unknown')
+    procedure_code = row.get(get_column(row, ['Procedure Code', 'CPT']), 'Unknown')
+    diagnosis_code = row.get(get_column(row, ['Diagnosis Code', 'ICD']), 'Unknown')
+    payer = row.get(get_column(row, ['Payer', 'Insurance']), 'Unknown')
+    total_charges = row.get(get_column(row, ['Total Charges', 'Charges']), 'Unknown')
+    location = row.get(get_column(row, ['Service Location', 'Hospital', 'Facility']), 'Unknown')
+    notes = row.get(get_column(row, ['Provider Notes', 'Notes', 'Justification']), '')
 
-Here is a claim record:
-- Claim ID: {row['Claim ID']}
-- Patient Age: {row['Patient Age']}
-- Payer: {row['Payer']}
-- CPT Code: {row['CPT Code']}
-- ICD-10 Code: {row['ICD-10 Code']}
-- Modifier: {row['Modifier']}
-- Prior Authorization: {row['Prior Authorization']}
-- Total Charges: ${row['Total Charges']}
-- Days from Discharge to Submission: {row['Days from Discharge to Submission']}
+    prompt = f"""
+You are an expert in medical billing. Given the following patient claim information, predict whether this claim will be approved or denied, with a confidence score. If likely denied, explain the reason and give suggestions to increase approval likelihood.
 
-Please answer in the format:
-Status: Approved or Denied  
-Confidence: X%  
-Reason: [only if Denied OR Confidence < 90%]  
-Suggestion: [only if Denied OR Confidence < 90%]
+- Patient Age: {patient_age}
+- Gender: {patient_gender}
+- Procedure Code (CPT): {procedure_code}
+- Diagnosis Code (ICD-10): {diagnosis_code}
+- Payer: {payer}
+- Total Charges: {total_charges}
+- Location: {location}
+- Provider Notes: {notes}
 
-Be concise but clinical.
+Respond in the following format:
+
+Approval Prediction: [Approved/Denied]  
+Confidence Score: [0.0 to 1.0]  
+Reason for Denial (if applicable): [Short explanation]  
+Suggested Fix (if applicable): [Actionable advice]
 """
-
-# --- Helper: Parse GPT Output ---
-def parse_response(text):
-    result = {
-        "Predicted Status": "",
-        "Confidence": "",
-        "Likely Denial Reason": "",
-        "Suggested Fix": ""
-    }
-    lines = text.splitlines()
-    for line in lines:
-        if line.startswith("Status:"):
-            result["Predicted Status"] = line.split(":", 1)[1].strip()
-        elif line.startswith("Confidence:"):
-            result["Confidence"] = line.split(":", 1)[1].strip()
-        elif line.startswith("Reason:"):
-            result["Likely Denial Reason"] = line.split(":", 1)[1].strip()
-        elif line.startswith("Suggestion:"):
-            result["Suggested Fix"] = line.split(":", 1)[1].strip()
-    return result
+    return prompt
 
 # --- Main Processing Function ---
 def analyze_claims(df, api_key):
