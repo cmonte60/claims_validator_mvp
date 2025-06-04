@@ -88,7 +88,7 @@ def analyze_claims(df, api_key):
             prompt = build_prompt(row)
             try:
                 response = client.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": "You are a helpful medical coding assistant."},
                         {"role": "user", "content": prompt}
