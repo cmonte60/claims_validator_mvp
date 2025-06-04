@@ -55,22 +55,47 @@ Suggested Fix (if applicable): [Actionable advice]
 """
     return prompt
 
+# --- Response Parser ---
+def parse_response(text):
+    approved = re.search(r"Approval Prediction:\s*(Approved|Denied)", text, re.IGNORECASE)
+    confidence = re.search(r"Confidence Score:\s*([0-9.]+)", text, re.IGNORECASE)
+    reason = re.search(r"Reason for Denial.*?:\s*(.*)", text, re.IGNORECASE)
+    suggestion = re.search(r"Suggested Fix.*?:\s*(.*)", text, re.IGNORECASE)
+
+    status = approved.group(1).capitalize() if approved else "Unknown"
+    conf_score = float(confidence.group(1)) if confidence else None
+
+    denial_reason = reason.group(1).strip() if status == "Denied" and reason else ""
+    suggestion_text = suggestion.group(1).strip() if status == "Denied" and suggestion else ""
+
+    if status == "Approved" and conf_score and conf_score >= 0.90:
+        denial_reason = ""
+        suggestion_text = ""
+
+    return {
+        "Predicted Status": status,
+        "Confidence": conf_score,
+        "Likely Denial Reason": denial_reason,
+        "Suggested Fix": suggestion_text
+    }
+
 # --- Main Processing Function ---
 def analyze_claims(df, api_key):
-    openai.api_key = api_key
+    client = openai.OpenAI(api_key=api_key)
     results = []
     with st.spinner("Analyzing claims using AI..."):
         for _, row in df.iterrows():
             prompt = build_prompt(row)
             try:
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
                         {"role": "system", "content": "You are a helpful medical coding assistant."},
                         {"role": "user", "content": prompt}
-                    ]
+                    ],
+                    temperature=0.3
                 )
-                reply = response["choices"][0]["message"]["content"]
+                reply = response.choices[0].message.content
                 parsed = parse_response(reply)
                 results.append(parsed)
             except Exception as e:
