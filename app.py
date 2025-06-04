@@ -16,12 +16,11 @@ api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
 uploaded_file = st.sidebar.file_uploader("Upload Claims CSV", type="csv")
 
 # --- Utility: Get best matching column name ---
-def get_column(df, options):
-    for col in df.columns:
-        for opt in options:
-            if opt.lower() in col.lower():
-                return col
-    return None
+def get_column(row, options):
+    for col in options:
+        if col in row.index:
+            return col
+    return options[0]  # default to first if none found
 
 # --- Updated Prompt Builder ---
 def build_prompt(row):
