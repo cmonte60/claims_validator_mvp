@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import asyncio
@@ -13,31 +12,28 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Dark Theme + Wrap Styling ---
+# --- Dark Theme + Styling ---
 st.markdown("""
     <style>
-        /* Apply dark background and light text */
-        html, body, [class*="css"]  {
+        html, body, [class*="css"] {
             background-color: #121212 !important;
             color: #E0E0E0 !important;
         }
-
-        /* Wrap long text in data table cells */
         .stDataFrame td, .stDataFrame th,
         .stDataEditor td, .stDataEditor th {
             white-space: normal !important;
             word-wrap: break-word !important;
             max-width: 300px !important;
         }
-
-        /* Table headers & text visibility improvements */
         .stDataFrame thead, .stDataEditor thead {
             background-color: #1e1e1e;
             color: #f0f0f0;
         }
+        .block-container {
+            padding: 2rem;
+        }
     </style>
 """, unsafe_allow_html=True)
-
 
 # --- Sidebar: API Key and File Upload ---
 st.sidebar.header("Configuration")
@@ -49,9 +45,9 @@ def get_column(row, options):
     for col in options:
         if col in row.index:
             return col
-    return options[0]  # default to first if none found
+    return options[0]
 
-# --- Updated Prompt Builder ---
+# --- Prompt Builder ---
 def build_prompt(row):
     patient_age = row.get(get_column(row, ['Patient Age', 'Age']), 'Unknown')
     patient_gender = row.get(get_column(row, ['Gender', 'Sex']), 'Unknown')
@@ -67,7 +63,7 @@ You are an expert in medical billing. Given the following patient claim informat
 
 Keep your response concise:
 - Limit denial reasons to one short sentence or phrase
-- Keep suggestions under 15 words and actionable
+- Keep suggestions under 10 words and actionable. if correct code is known, provide that in the suggestion
 
 - Patient Age: {patient_age}
 - Gender: {patient_gender}
@@ -86,7 +82,7 @@ Reason for Denial (if applicable): [Concise phrase or one-sentence explanation]
 Suggested Fix (if applicable): [One short, actionable sentence under 15 words]
 """
 
-# --- Response Parser ---
+# --- Parse GPT Response ---
 def parse_response(text):
     approved = re.search(r"Approval Prediction:\s*(Approved|Denied)", text, re.IGNORECASE)
     confidence = re.search(r"Confidence Score:\s*([0-9.]+)", text, re.IGNORECASE)
@@ -110,7 +106,7 @@ def parse_response(text):
         "Suggested Fix": suggestion_text
     }
 
-# --- Async OpenAI Call ---
+# --- Async API Call ---
 async def async_call_openai(prompt, api_key):
     try:
         headers = {
@@ -137,7 +133,7 @@ async def async_call_openai(prompt, api_key):
             "Suggested Fix": "Check API or prompt"
         }
 
-# --- Main Processing Function ---
+# --- Analyze Claims ---
 def analyze_claims(df, api_key):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -148,7 +144,7 @@ def analyze_claims(df, api_key):
 
 # --- Main UI ---
 st.title("AI-Powered Claims Review Platform")
-st.caption("Demonstrate predictive denial analysis and real-time suggestions using GPT-4o")
+st.caption("Predict claim outcomes and receive real-time denial mitigation suggestions using GPT-4o")
 
 if not api_key:
     st.warning("Please enter your OpenAI API key to begin.")
@@ -159,7 +155,7 @@ elif uploaded_file:
 
     processed_df = analyze_claims(df, api_key)
 
-        st.subheader("AI Feedback")
+    st.subheader("AI Feedback")
     st.data_editor(
         processed_df[[
             "Claim ID", "Predicted Status", "Confidence",
@@ -176,6 +172,7 @@ elif uploaded_file:
 
     csv = processed_df.to_csv(index=False).encode('utf-8')
     st.download_button("Download Full Results", data=csv, file_name="ai_claims_results.csv", mime="text/csv")
+
 else:
     st.info("Upload a claims file to start.")
 
