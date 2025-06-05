@@ -162,7 +162,7 @@ elif uploaded_file:
         use_container_width=True,
         disabled=True  # Makes it read-only like st.dataframe
     )
-        use_container_width=True,
+    use_container_width=True,
         column_config={
             "Likely Denial Reason": st.column_config.TextColumn(
                 "Likely Denial Reason", width="medium"
