@@ -11,15 +11,18 @@ st.set_page_config(
     page_title="Claims Predictor MVP",
     layout="wide"
 )
-# --- Enable Text Wrapping in Data Table ---
+
+# --- Custom Styling ---
 st.markdown("""
     <style>
-        /* Wrap long text in tables */
-        .dataframe td {
-            white-space: normal !important;
-            word-wrap: break-word !important;
+        .stApp {
+            background-color: #f7f9fc;
+            color: #1a1a1a;
         }
-        .stDataFrame tbody td {
+        .stTitle, .stSubtitle {
+            color: #003366;
+        }
+        .stDataFrame tbody td, .stDataEditor tbody td {
             white-space: normal !important;
             word-wrap: break-word !important;
             max-width: 400px !important;
@@ -73,7 +76,6 @@ Confidence Score: [0.0 to 1.0]
 Reason for Denial (if applicable): [Concise phrase or one-sentence explanation]  
 Suggested Fix (if applicable): [One short, actionable sentence under 15 words]
 """
-
 
 # --- Response Parser ---
 def parse_response(text):
@@ -160,26 +162,13 @@ elif uploaded_file:
         },
         hide_index=True,
         use_container_width=True,
-        disabled=True  # Makes it read-only like st.dataframe
-    )
-    use_container_width=True,
-    column_config={
-            "Likely Denial Reason": st.column_config.TextColumn(
-                "Likely Denial Reason", width="medium"
-            ),
-            "Suggested Fix": st.column_config.TextColumn(
-                "Suggested Fix", width="medium"
-            )
-        },
-    hide_index=True
+        disabled=True
     )
 
     csv = processed_df.to_csv(index=False).encode('utf-8')
     st.download_button("Download Full Results", data=csv, file_name="ai_claims_results.csv", mime="text/csv")
-
 else:
     st.info("Upload a claims file to start.")
-
 
 # --- Footer ---
 st.markdown("""
