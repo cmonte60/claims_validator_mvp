@@ -1,8 +1,10 @@
 # app.py
 import streamlit as st
 import pandas as pd
-import openai
+import asyncio
+import httpx
 import re
+import openai
 
 # --- Page Config ---
 st.set_page_config(
@@ -24,7 +26,6 @@ def get_column(row, options):
 
 # --- Updated Prompt Builder ---
 def build_prompt(row):
-    # Dynamically resolve flexible column names
     patient_age = row.get(get_column(row, ['Patient Age', 'Age']), 'Unknown')
     patient_gender = row.get(get_column(row, ['Gender', 'Sex']), 'Unknown')
     procedure_code = row.get(get_column(row, ['Procedure Code', 'CPT']), 'Unknown')
@@ -34,7 +35,7 @@ def build_prompt(row):
     location = row.get(get_column(row, ['Service Location', 'Hospital', 'Facility']), 'Unknown')
     notes = row.get(get_column(row, ['Provider Notes', 'Notes', 'Justification']), '')
 
-    prompt = f"""
+    return f"""
 You are an expert in medical billing. Given the following patient claim information, predict whether this claim will be approved or denied, with a confidence score. If likely denied, explain the reason and give suggestions to increase approval likelihood.
 
 - Patient Age: {patient_age}
@@ -53,7 +54,6 @@ Confidence Score: [0.0 to 1.0]
 Reason for Denial (if applicable): [Short explanation]  
 Suggested Fix (if applicable): [Actionable advice]
 """
-    return prompt
 
 # --- Response Parser ---
 def parse_response(text):
@@ -79,32 +79,40 @@ def parse_response(text):
         "Suggested Fix": suggestion_text
     }
 
+# --- Async OpenAI Call ---
+async def async_call_openai(prompt, api_key):
+    try:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        json_data = {
+            "model": "gpt-4o",
+            "messages": [
+                {"role": "system", "content": "You are a helpful medical coding assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.3
+        }
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=json_data)
+            reply = response.json()["choices"][0]["message"]["content"]
+            return parse_response(reply)
+    except Exception as e:
+        return {
+            "Predicted Status": "Error",
+            "Confidence": "",
+            "Likely Denial Reason": str(e),
+            "Suggested Fix": "Check API or prompt"
+        }
+
 # --- Main Processing Function ---
 def analyze_claims(df, api_key):
-    client = openai.OpenAI(api_key=api_key)
-    results = []
-    with st.spinner("Analyzing claims using AI..."):
-        for _, row in df.iterrows():
-            prompt = build_prompt(row)
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful medical coding assistant."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.3
-                )
-                reply = response.choices[0].message.content
-                parsed = parse_response(reply)
-                results.append(parsed)
-            except Exception as e:
-                results.append({
-                    "Predicted Status": "Error",
-                    "Confidence": "",
-                    "Likely Denial Reason": str(e),
-                    "Suggested Fix": "Check API or prompt"
-                })
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    prompts = [build_prompt(row) for _, row in df.iterrows()]
+    tasks = [async_call_openai(prompt, api_key) for prompt in prompts]
+    results = loop.run_until_complete(asyncio.gather(*tasks))
     return pd.concat([df.reset_index(drop=True), pd.DataFrame(results)], axis=1)
 
 # --- Main UI ---
