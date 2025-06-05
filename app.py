@@ -11,6 +11,21 @@ st.set_page_config(
     page_title="Claims Predictor MVP",
     layout="wide"
 )
+# --- Enable Text Wrapping in Data Table ---
+st.markdown("""
+    <style>
+        /* Wrap long text in tables */
+        .dataframe td {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+        }
+        .stDataFrame tbody td {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            max-width: 400px !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # --- Sidebar: API Key and File Upload ---
 st.sidebar.header("Configuration")
