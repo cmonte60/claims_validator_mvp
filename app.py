@@ -149,11 +149,20 @@ elif uploaded_file:
     processed_df = analyze_claims(df, api_key)
 
     st.subheader("AI Feedback")
-    st.dataframe(
-        processed_df[[
-            "Claim ID", "Predicted Status", "Confidence",
-            "Likely Denial Reason", "Suggested Fix"
-        ]],
+    st.data_editor(
+    processed_df[[
+        "Claim ID", "Predicted Status", "Confidence",
+        "Likely Denial Reason", "Suggested Fix"
+    ]],
+    column_config={
+        "Likely Denial Reason": st.column_config.TextColumn(width="medium"),
+        "Suggested Fix": st.column_config.TextColumn(width="medium")
+    },
+    hide_index=True,
+    use_container_width=True,
+    disabled=True  # Makes it read-only like st.dataframe
+)
+,
         use_container_width=True,
         column_config={
             "Likely Denial Reason": st.column_config.TextColumn(
