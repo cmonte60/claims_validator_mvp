@@ -171,7 +171,7 @@ elif uploaded_file:
                 "Suggested Fix", width="medium"
             )
         },
-        hide_index=True
+    hide_index=True
     )
 
     csv = processed_df.to_csv(index=False).encode('utf-8')
