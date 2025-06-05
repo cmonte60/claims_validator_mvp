@@ -133,7 +133,7 @@ elif uploaded_file:
 
     processed_df = analyze_claims(df, api_key)
 
-    st.subheader("AI Feedback")
+st.subheader("AI Feedback")
 st.dataframe(
     processed_df[[
         "Claim ID", "Predicted Status", "Confidence",
