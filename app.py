@@ -134,10 +134,22 @@ elif uploaded_file:
     processed_df = analyze_claims(df, api_key)
 
     st.subheader("AI Feedback")
-    st.dataframe(processed_df[[
+st.dataframe(
+    processed_df[[
         "Claim ID", "Predicted Status", "Confidence",
         "Likely Denial Reason", "Suggested Fix"
-    ]])
+    ]],
+    use_container_width=True,
+    column_config={
+        "Likely Denial Reason": st.column_config.TextColumn(
+            "Likely Denial Reason", width="medium"
+        ),
+        "Suggested Fix": st.column_config.TextColumn(
+            "Suggested Fix", width="medium"
+        )
+    },
+    hide_index=True
+)
 
     csv = processed_df.to_csv(index=False).encode('utf-8')
     st.download_button("Download Full Results", data=csv, file_name="ai_claims_results.csv", mime="text/csv")
