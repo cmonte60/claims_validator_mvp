@@ -35,7 +35,7 @@ def build_prompt(row):
     location = row.get(get_column(row, ['Service Location', 'Hospital', 'Facility']), 'Unknown')
     notes = row.get(get_column(row, ['Provider Notes', 'Notes', 'Justification']), '')
 
-    prompt = f"""
+    return = f"""
 You are an expert in medical billing. Given the following patient claim information, predict whether this claim will be approved or denied, with a confidence score. If likely denied, explain the reason and give suggestions to increase approval likelihood.
 
 Keep your response concise:
