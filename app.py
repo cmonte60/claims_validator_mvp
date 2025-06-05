@@ -9,26 +9,35 @@ import openai
 # --- Page Config ---
 st.set_page_config(
     page_title="Claims Predictor MVP",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# --- Custom Styling ---
+# --- Dark Theme + Wrap Styling ---
 st.markdown("""
     <style>
-        .stApp {
-            background-color: #f7f9fc;
-            color: #1a1a1a;
+        /* Apply dark background and light text */
+        html, body, [class*="css"]  {
+            background-color: #121212 !important;
+            color: #E0E0E0 !important;
         }
-        .stTitle, .stSubtitle {
-            color: #003366;
-        }
-        .stDataFrame tbody td, .stDataEditor tbody td {
+
+        /* Wrap long text in data table cells */
+        .stDataFrame td, .stDataFrame th,
+        .stDataEditor td, .stDataEditor th {
             white-space: normal !important;
             word-wrap: break-word !important;
-            max-width: 400px !important;
+            max-width: 300px !important;
+        }
+
+        /* Table headers & text visibility improvements */
+        .stDataFrame thead, .stDataEditor thead {
+            background-color: #1e1e1e;
+            color: #f0f0f0;
         }
     </style>
 """, unsafe_allow_html=True)
+
 
 # --- Sidebar: API Key and File Upload ---
 st.sidebar.header("Configuration")
@@ -150,15 +159,15 @@ elif uploaded_file:
 
     processed_df = analyze_claims(df, api_key)
 
-    st.subheader("AI Feedback")
+        st.subheader("AI Feedback")
     st.data_editor(
         processed_df[[
             "Claim ID", "Predicted Status", "Confidence",
             "Likely Denial Reason", "Suggested Fix"
         ]],
         column_config={
-            "Likely Denial Reason": st.column_config.TextColumn(width="medium"),
-            "Suggested Fix": st.column_config.TextColumn(width="medium")
+            "Likely Denial Reason": st.column_config.TextColumn("Likely Denial Reason", width="medium"),
+            "Suggested Fix": st.column_config.TextColumn("Suggested Fix", width="medium")
         },
         hide_index=True,
         use_container_width=True,
