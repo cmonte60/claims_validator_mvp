@@ -154,7 +154,7 @@ st.dataframe(
 csv = processed_df.to_csv(index=False).encode('utf-8')
 st.download_button("Download Full Results", data=csv, file_name="ai_claims_results.csv", mime="text/csv")
 else:
-st.info("Upload a claims file to start.")
+    st.info("Upload a claims file to start.")
 
 # --- Footer ---
 st.markdown("""
