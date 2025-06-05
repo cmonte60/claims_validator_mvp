@@ -35,8 +35,12 @@ def build_prompt(row):
     location = row.get(get_column(row, ['Service Location', 'Hospital', 'Facility']), 'Unknown')
     notes = row.get(get_column(row, ['Provider Notes', 'Notes', 'Justification']), '')
 
-    return f"""
+    prompt = f"""
 You are an expert in medical billing. Given the following patient claim information, predict whether this claim will be approved or denied, with a confidence score. If likely denied, explain the reason and give suggestions to increase approval likelihood.
+
+Keep your response concise:
+- Limit denial reasons to one short sentence or phrase
+- Keep suggestions under 15 words and actionable
 
 - Patient Age: {patient_age}
 - Gender: {patient_gender}
@@ -51,9 +55,10 @@ Respond in the following format:
 
 Approval Prediction: [Approved/Denied]  
 Confidence Score: [0.0 to 1.0]  
-Reason for Denial (if applicable): [Short explanation]  
-Suggested Fix (if applicable): [Actionable advice]
+Reason for Denial (if applicable): [Concise phrase or one-sentence explanation]  
+Suggested Fix (if applicable): [One short, actionable sentence under 15 words]
 """
+
 
 # --- Response Parser ---
 def parse_response(text):
